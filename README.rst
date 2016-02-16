@@ -16,13 +16,16 @@ FCMcmp to parse these files, it returns a list- and dictionary-based data
 structure that contains these associations, plus it automatically parses the 
 raw FCS data into a pandas data frame.
 
+.. image:: https://travis-ci.org/kalekundert/fcmcmp.svg?branch=master
+    :target: https://travis-ci.org/kalekundert/fcmcmp
+
 Installation
 ============
 ``fcmcmp`` is available on PyPI::
 
    pip install fcmcmp
 
-Only python>=3.4 is supported.
+Only python>=3.2 is supported.
 
 Quick Start
 ===========

@@ -25,7 +25,7 @@ Installation
 
    pip install fcmcmp
 
-Only python>=3.2 is supported.
+Only python>=3.0 is supported.
 
 Quick Start
 ===========

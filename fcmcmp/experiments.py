@@ -2,7 +2,7 @@
 
 from pprint import pprint
 
-def load_experiment(yml_path):
+def load_experiments(yml_path):
     import yaml, logging, fcsparser
     from pathlib import Path
 
@@ -44,14 +44,14 @@ def load_experiment(yml_path):
     else:
         raise UsageError("No plates specified.")
 
-    # Construct and fill in an experiment data structure.  Cache parsed data in 
-    # the 'wells' directory.  Parsing a well is expensive because there is a 
-    # lot of data associated with each one.  Furthermore, experiments can use 
-    # some wells over and over while not using others at all.  All of this 
-    # makes on-the-fly caching worth the effort.
+    # Construct and fill in a list of experiments.  Cache parsed data in the 
+    # 'wells' directory.  Parsing a well is expensive because there is a lot of 
+    # data associated with each one.  Furthermore, experiments can use some 
+    # wells over and over while not using others at all.  All of this makes 
+    # on-the-fly caching worth the effort.
 
     wells = {}
-    experiment = []
+    experiments = []
 
     def load_well(name):
         if name in wells:
@@ -81,24 +81,24 @@ def load_experiment(yml_path):
         return wells[name]
 
 
-    for document in documents:
-        experiment.append(document)
+    for experiment in documents:
+        experiments.append(experiment)
 
         # Make sure each document has a label and a list of wells.  Other key- 
         # value pairs can be present but are not required.
 
-        if 'label' not in document:
-            raise UsageError("The following comparison is missing a label:\n\n{}".format(yaml.dump(document)))
-        if 'wells' not in document:
-            raise UsageError("The following comparison doesn't have any wells:\n\n{}".format(yaml.dump(document)))
+        if 'label' not in experiment:
+            raise UsageError("The following experiment is missing a label:\n\n{}".format(yaml.dump(experiment)))
+        if 'wells' not in experiment:
+            raise UsageError("The following experiment doesn't have any wells:\n\n{}".format(yaml.dump(experiment)))
 
         # Set the well data for the comparison.  This requires converting the 
         # well names we were given into paths and parsing those files.
 
-        for well_type, well_names in document['wells'].items():
-            document['wells'][well_type] = [load_well(x) for x in well_names]
+        for well_type, well_names in experiment['wells'].items():
+            experiment['wells'][well_type] = [load_well(x) for x in well_names]
 
-    return experiment
+    return experiments
         
 def parse_well(name):
     """

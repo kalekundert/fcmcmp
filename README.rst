@@ -86,7 +86,7 @@ or rename any other field::
 Once you have a YAML metadata file, you can use ``fcmcmp`` to read it::
 
    >>> import fcmcmp, pprint
-   >>> experiment = fcmcmp.load_experiment('my_plate.yml')
+   >>> experiments = fcmcmp.load_experiments('my_plate.yml')
    >>> pprint.pprint(experiment)
    [{'label': 'vaxadrin',
      'wells': {

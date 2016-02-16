@@ -11,42 +11,42 @@ dummy_data = Path(__file__).parent / 'dummy_data'
 
 def test_empty_file():
     with pytest.raises(fcmcmp.UsageError) as exc_info:
-        fcmcmp.load_experiment(dummy_data / 'empty_file.yml')
+        fcmcmp.load_experiments(dummy_data / 'empty_file.yml')
     assert "is empty" in str(exc_info.value)
 
 def test_missing_label():
     with pytest.raises(fcmcmp.UsageError) as exc_info:
-        fcmcmp.load_experiment(dummy_data / 'missing_label.yml')
+        fcmcmp.load_experiments(dummy_data / 'missing_label.yml')
     assert "missing a label" in str(exc_info.value)
 
 def test_missing_wells():
     with pytest.raises(fcmcmp.UsageError) as exc_info:
-        fcmcmp.load_experiment(dummy_data / 'missing_wells.yml')
+        fcmcmp.load_experiments(dummy_data / 'missing_wells.yml')
     assert "doesn't have any wells" in str(exc_info.value)
 
 def test_unparseable_well():
     with pytest.raises(fcmcmp.UsageError) as exc_info:
-        fcmcmp.load_experiment(dummy_data / 'unparseable_well.yml')
+        fcmcmp.load_experiments(dummy_data / 'unparseable_well.yml')
     assert "Can't parse well name" in str(exc_info.value)
 
 def test_nonexistent_well():
     with pytest.raises(fcmcmp.UsageError) as exc_info:
-        fcmcmp.load_experiment(dummy_data / 'nonexistent_well.yml')
+        fcmcmp.load_experiments(dummy_data / 'nonexistent_well.yml')
     assert "No *.fcs files found for well" in str(exc_info.value)
 
 def test_unspecified_plate():
     with pytest.raises(fcmcmp.UsageError) as exc_info:
-        fcmcmp.load_experiment(dummy_data / 'unspecified_plate.yml')
+        fcmcmp.load_experiments(dummy_data / 'unspecified_plate.yml')
     assert "No plates specified" in str(exc_info.value)
 
 def test_undefined_plate():
     with pytest.raises(fcmcmp.UsageError) as exc_info:
-        fcmcmp.load_experiment(dummy_data / 'undefined_plate.yml')
+        fcmcmp.load_experiments(dummy_data / 'undefined_plate.yml')
     assert "Plate 'foo' not defined." in str(exc_info.value)
 
 def test_ambiguous_header():
     with pytest.raises(fcmcmp.UsageError) as exc_info:
-        fcmcmp.load_experiment(dummy_data / 'ambiguous_header.yml')
+        fcmcmp.load_experiments(dummy_data / 'ambiguous_header.yml')
     assert "Too many fields in 'plates' header." in str(exc_info.value)
 
 def test_parse_well():
@@ -75,48 +75,48 @@ def test_parse_well():
         assert fcmcmp.parse_well(name) == expected_result
 
 def test_infer_plate_1():
-    experiment = fcmcmp.load_experiment(dummy_data / 'plate_1.yml')
+    experiments = fcmcmp.load_experiments(dummy_data / 'plate_1.yml')
 
-    assert experiment[0]['label'] == 'sgGFP'
-    assert experiment[0]['channel'] == 'FITC-A'
+    assert experiments[0]['label'] == 'sgGFP'
+    assert experiments[0]['channel'] == 'FITC-A'
 
-    for comparison in experiment:
-        for wells in comparison['wells'].values():
+    for experiment in experiments:
+        for wells in experiment['wells'].values():
             for well in wells:
                 assert isinstance(well, pd.DataFrame)
 
 def test_specify_plate_1():
-    experiment = fcmcmp.load_experiment(dummy_data / 'specify_plate_1.yml')
+    experiments = fcmcmp.load_experiments(dummy_data / 'specify_plate_1.yml')
 
-    assert experiment[0]['label'] == 'sgRFP'
-    assert experiment[0]['channel'] == 'PE-Texas Red-A'
+    assert experiments[0]['label'] == 'sgRFP'
+    assert experiments[0]['channel'] == 'PE-Texas Red-A'
 
-    for comparison in experiment:
-        for wells in comparison['wells'].values():
+    for experiment in experiments:
+        for wells in experiment['wells'].values():
             for well in wells:
                 assert isinstance(well, pd.DataFrame)
 
 def test_specify_both_plates():
-    experiment = fcmcmp.load_experiment(dummy_data / 'specify_both_plates.yml')
+    experiments = fcmcmp.load_experiments(dummy_data / 'specify_both_plates.yml')
 
-    assert experiment[0]['label'] == 'sgNull'
-    assert experiment[0]['channel'] == 'FSC-A'
+    assert experiments[0]['label'] == 'sgNull'
+    assert experiments[0]['channel'] == 'FSC-A'
 
-    for comparison in experiment:
-        for wells in comparison['wells'].values():
+    for experiment in experiments:
+        for wells in experiment['wells'].values():
             for well in wells:
                 assert isinstance(well, pd.DataFrame)
 
-def test_multiple_comparisons():
-    experiment = fcmcmp.load_experiment(dummy_data / 'multiple_comparisons.yml')
+def test_multiple_experiments():
+    experiments = fcmcmp.load_experiments(dummy_data / 'multiple_experiments.yml')
 
-    assert experiment[0]['label'] == 'sgGFP'
-    assert experiment[0]['channel'] == 'FITC-A'
-    assert experiment[1]['label'] == 'sgRFP'
-    assert experiment[1]['channel'] == 'PE-Texas Red-A'
+    assert experiments[0]['label'] == 'sgGFP'
+    assert experiments[0]['channel'] == 'FITC-A'
+    assert experiments[1]['label'] == 'sgRFP'
+    assert experiments[1]['channel'] == 'PE-Texas Red-A'
 
-    for comparison in experiment:
-        for wells in comparison['wells'].values():
+    for experiment in experiments:
+        for wells in experiment['wells'].values():
             for well in wells:
                 assert isinstance(well, pd.DataFrame)
 

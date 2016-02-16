@@ -15,7 +15,7 @@ setup(
     version=__version__,
     author=__author__,
     author_email=__email__,
-    description='',
+    description="A lightweight, flexible, and modern framework for annotating flow cytometry data.",
     long_description=readme,
     url='https://github.com/kalekundert/fcmcmp',
     packages=[

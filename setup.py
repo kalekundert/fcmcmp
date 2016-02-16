@@ -25,6 +25,7 @@ setup(
     install_requires=[
         'fcsparser',
         'pyyaml',
+        'pathlib',
     ],
     license='MIT',
     zip_safe=False,

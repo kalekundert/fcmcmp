@@ -24,6 +24,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'fcsparser',
+        'pyyaml',
     ],
     license='MIT',
     zip_safe=False,

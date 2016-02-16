@@ -1,0 +1,9 @@
+plates:
+    p1: plate_1
+    p2: plate_2
+---
+label: sgNull
+channel: FSC-A
+wells:
+    before: [p1/A1, p2/A1]
+    after: [p1/B1, p2/B1]

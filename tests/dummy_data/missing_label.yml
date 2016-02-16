@@ -1,0 +1,6 @@
+plate: plate_1
+---
+channel: FITC-A
+wells:
+    before: [A1]
+    after: [B1]

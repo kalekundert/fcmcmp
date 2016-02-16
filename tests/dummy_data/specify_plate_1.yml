@@ -1,0 +1,7 @@
+plate: plate_1
+---
+label: sgRFP
+channel: PE-Texas Red-A
+wells:
+    before: [A1]
+    after: [B1]

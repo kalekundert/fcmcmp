@@ -26,6 +26,7 @@ setup(
         'fcsparser',
         'pyyaml',
         'pathlib',
+        'pandas',
     ],
     license='MIT',
     zip_safe=False,

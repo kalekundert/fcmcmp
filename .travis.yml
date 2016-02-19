@@ -6,7 +6,6 @@ python:
   - "3.5"
   - "nightly"
 install:
-  - pip install pandas
   - pip install .
 script: 
   - py.test tests

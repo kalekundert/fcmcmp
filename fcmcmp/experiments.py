@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from pprint import pprint
+import pandas; pandas.set_option('display.large_repr', 'info')
 
 def load_experiments(yml_path):
     import yaml, logging, fcsparser

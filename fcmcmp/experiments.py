@@ -3,7 +3,7 @@
 from pprint import pprint
 import pandas; pandas.set_option('display.large_repr', 'info')
 
-def load_experiments(yml_path):
+def load_experiments(yml_path, well_glob='**/*_{}_*.fcs'):
     import yaml, logging, fcsparser
     from pathlib import Path
 
@@ -45,19 +45,15 @@ def load_experiments(yml_path):
     else:
         raise UsageError("No plates specified.")
 
-    # Construct and fill in a list of experiments.  Cache parsed data in the 
-    # 'wells' directory.  Parsing a well is expensive because there is a lot of 
-    # data associated with each one.  Furthermore, experiments can use some 
-    # wells over and over while not using others at all.  All of this makes 
-    # on-the-fly caching worth the effort.
+    # Construct and fill in a list of experiments.  Well names are converted 
+    # into paths based on the user-given glob pattern, then parsed and stored 
+    # as pandas data frames.  Note that if a well is referenced more than once, 
+    # it will also be parsed more than once.  This guarantees that each well 
+    # can be processed independently, which is important for many workflows.
 
-    wells = {}
     experiments = []
 
     def load_well(name):
-        if name in wells:
-            return wells[name]
-
         # Find the *.fcs file referenced by the given name.
 
         plate, well = parse_well(name)
@@ -68,7 +64,7 @@ def load_experiments(yml_path):
                     "No default plate defined.")
 
         plate_path = plates[plate]
-        well_paths = list(plate_path.glob('**/*_{}_*.fcs'.format(well)))
+        well_paths = list(plate_path.glob(well_glob.format(well)))
         if len(well_paths) == 0:
             raise UsageError("No *.fcs files found for well '{}'".format(name))
         if len(well_paths) > 1:
@@ -78,8 +74,8 @@ def load_experiments(yml_path):
         # Load the cell data for the given well.
         
         logging.info('Loading {}'.format(well_path.name))
-        meta, wells[name] = fcsparser.parse(str(well_path))
-        return wells[name]
+        meta, data = fcsparser.parse(str(well_path))
+        return data
 
 
     for experiment in documents:

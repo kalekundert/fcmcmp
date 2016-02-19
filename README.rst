@@ -95,11 +95,10 @@ Once you have a YAML metadata file, you can use ``fcmcmp`` to read it::
 
 The data structure returned is little more than a list of dictionaries, which 
 should be easy to work with in pretty much any context.  Note that the names in  
-the "wells" section have been replaced with pandas data frames containing the 
-raw data.  The excellent ``fcsparse`` library was used to read the ``*.fcs`` 
-files.  Note that even if you reference the same well more than once (which is 
-totally legal), the file will only be parsed once and every instance of that 
-well will point to the same data frame.
+the "wells" section are replaced with pandas data frames containing the raw 
+data.  The excellent ``fcsparse`` library is used to read the ``*.fcs`` files.  
+Note that if you reference the same well more than once (e.g. for controls that 
+apply to all of your experiments), each reference gets its own data frame.
 
 Bugs and new features
 =====================

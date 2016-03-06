@@ -100,7 +100,7 @@ Once you have a YAML metadata file, you can use ``fcmcmp`` to read it::
 
 The data structure returned is little more than a list of dictionaries, which 
 should be easy to work with in pretty much any context.  The wells are 
-represented by ``Well`` objects, which have only three attributes::
+represented by ``Well`` objects, which have only three attributes:
 
    - ``Well.label``: The name used to reference the well in the YAML file.  
    - ``Well.data``: A ``pandas.DataFrame`` containing all the data associated 

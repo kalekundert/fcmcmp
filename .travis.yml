@@ -24,4 +24,4 @@ script:
 
 # Report coverage
 after_success:
-  - coveralls
+    - coveralls -b tests/

@@ -20,10 +20,9 @@ install:
 
 # Run tests
 script: 
-  - py.test tests
+  - py.test tests --cov fcmcmp
 
 # Report coverage
 after_success:
-    - ls -a .
-    - ls -a tests/
-    - coveralls -c tests/.coveragerc -d tests/.coverage
+    - ls -a . tests/
+    - coveralls

@@ -92,16 +92,25 @@ Once you have a YAML metadata file, you can use ``fcmcmp`` to read it::
    >>> experiments = fcmcmp.load_experiments('my_plate.yml')
    >>> pprint.pprint(experiment)
    [{'label': 'vaxadrin',
-     'wells': {
-      'without': [pd.DataFrame...],
-      'with': [pd.DataFrame...]}}]
+     'wells': {'with': [Well(B1), Well(B2), Well(B3)],
+               'without': [Well(A1), Well(A2), Well(A3)]}},
+    {'label': 'vaxamaxx',
+     'wells': {'with': [Well(C1), Well(C2), Well(C3)],
+               'without': [Well(A1), Well(A2), Well(A3)]}}]
 
 The data structure returned is little more than a list of dictionaries, which 
-should be easy to work with in pretty much any context.  Note that the names in  
-the "wells" section are replaced with pandas data frames containing the raw 
-data.  The excellent ``fcsparse`` library is used to read the ``*.fcs`` files.  
+should be easy to work with in pretty much any context.  The wells are 
+represented by ``Well`` objects, which have only three attributes::
+
+   - ``Well.label``: The name used to reference the well in the YAML file.  
+   - ``Well.data``: A ``pandas.DataFrame`` containing all the data associated 
+     with the well, parsed using the excellent ``fcsparse`` library.
+   - ``Well.meta``: A dictionary containing any metadata associated with the 
+     well, also parsed using ``fcsparse``.
+
 Note that if you reference the same well more than once (e.g. for controls that 
-apply to all of your experiments), each reference gets its own data frame.
+apply to all of your experiments), each reference is parsed separately and gets 
+its own copy of all the data.
 
 Bugs and new features
 =====================

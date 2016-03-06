@@ -19,6 +19,9 @@ raw FCS data into a pandas data frame.
 .. image:: https://travis-ci.org/kalekundert/fcmcmp.svg?branch=master
     :target: https://travis-ci.org/kalekundert/fcmcmp
 
+.. image:: https://coveralls.io/repos/github/kalekundert/fcmcmp/badge.svg?branch=master 
+   :target: https://coveralls.io/github/kalekundert/fcmcmp?branch=master 
+
 Installation
 ============
 ``fcmcmp`` is available on PyPI::

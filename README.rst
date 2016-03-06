@@ -102,11 +102,11 @@ The data structure returned is little more than a list of dictionaries, which
 should be easy to work with in pretty much any context.  The wells are 
 represented by ``Well`` objects, which have only three attributes:
 
-   - ``Well.label``: The name used to reference the well in the YAML file.  
-   - ``Well.data``: A ``pandas.DataFrame`` containing all the data associated 
-     with the well, parsed using the excellent ``fcsparse`` library.
-   - ``Well.meta``: A dictionary containing any metadata associated with the 
-     well, also parsed using ``fcsparse``.
+- ``Well.label``: The name used to reference the well in the YAML file.  
+- ``Well.data``: A ``pandas.DataFrame`` containing all the data associated 
+  with the well, parsed using the excellent ``fcsparse`` library.
+- ``Well.meta``: A dictionary containing any metadata associated with the 
+  well, also parsed using ``fcsparse``.
 
 Note that if you reference the same well more than once (e.g. for controls that 
 apply to all of your experiments), each reference is parsed separately and gets 

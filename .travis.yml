@@ -25,5 +25,4 @@ script:
 
 # Report coverage
 after_success:
-    - ls -a .. .
     - coveralls

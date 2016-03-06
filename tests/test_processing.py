@@ -75,4 +75,18 @@ def test_gate_small_cells():
     assert well.data['SSC-A'].tolist() == [3, 4, 5]
     assert well.data['FSC-A + m * SSC-A'].tolist() == [6, 8, 10]
 
+def test_gate_early_events():
+    experiments, well = dummy_data({
+        'Time':  [0, 1, 2, 3, 4, 5],
+    })
 
+    gate_early_events = fcmcmp.GateEarlyEvents()
+    gate_early_events.throwaway_secs = 0
+    gate_early_events(experiments)
+
+    assert well.data['Time'].tolist() == [0, 1, 2, 3, 4, 5]
+
+    gate_early_events.throwaway_secs = 2
+    gate_early_events(experiments)
+
+    assert well.data['Time'].tolist() == [2, 3, 4, 5]

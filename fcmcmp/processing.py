@@ -135,3 +135,10 @@ class GateSmallCells(GatingStep):
         return sizes < np.percentile(sizes, self.threshold)
 
 
+class GateEarlyEvents(GatingStep):
+
+    def __init__(self, throwaway_secs=2):
+        self.throwaway_secs = throwaway_secs
+
+    def gate(self, experiment, well):
+        return well.data['Time'] < self.throwaway_secs

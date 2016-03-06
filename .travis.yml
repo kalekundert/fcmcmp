@@ -6,7 +6,7 @@ python:
   - "3.5"
   - "nightly"
 before_install:
-    - sudo apt-get install python3-pandas python3-scipy
+    - sudo apt-get install python3-scipy
 install:
   - pip install .
 script: 

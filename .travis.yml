@@ -4,7 +4,6 @@ python:
   - "3.3"
   - "3.4"
   - "3.5"
-  - "nightly"
 
 # Setup anaconda
 before_install:
@@ -16,7 +15,7 @@ before_install:
 # Install packages
 install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy scipy pandas
-  - pip install python-coveralls pytest-cov
+  - pip install python-coveralls pytest-cov nonstdlib
   - pip install .
 
 # Run tests

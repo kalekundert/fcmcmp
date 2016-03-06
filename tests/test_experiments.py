@@ -10,6 +10,11 @@ def test_empty_file():
         fcmcmp.load_experiments(dummy_data / 'empty_file.yml')
     assert "is empty" in str(exc_info.value)
 
+def test_empty_experiment():
+    with pytest.raises(fcmcmp.UsageError) as exc_info:
+        fcmcmp.load_experiments(dummy_data / 'empty_experiment.yml')
+    assert "empty experiment was found" in str(exc_info.value)
+
 def test_missing_label():
     with pytest.raises(fcmcmp.UsageError) as exc_info:
         fcmcmp.load_experiments(dummy_data / 'missing_label.yml')
@@ -74,6 +79,22 @@ def test_multiple_experiments():
     assert experiments[1]['channel'] == 'PE-Texas Red-A'
 
     check_wells(experiments, before=['A1'], after=['B1'])
+
+def test_load_experiment():
+    gfp_experiment = fcmcmp.load_experiment(
+            dummy_data / 'multiple_experiments.yml', 'sgGFP')
+    rfp_experiment = fcmcmp.load_experiment(
+            dummy_data / 'multiple_experiments.yml', 'sgRFP')
+
+    assert gfp_experiment['label'] == 'sgGFP'
+    assert gfp_experiment['channel'] == 'FITC-A'
+    assert rfp_experiment['label'] == 'sgRFP'
+    assert rfp_experiment['channel'] == 'PE-Texas Red-A'
+
+    with pytest.raises(fcmcmp.UsageError) as exc_info:
+        fcmcmp.load_experiment(
+                dummy_data / 'multiple_experiments.yml', 'foobar')
+    assert "No experiment named 'foobar'" in str(exc_info.value)
 
 def check_wells(experiments, **expected_wells):
     for expriment, condition, well in fcmcmp.yield_wells(experiments):

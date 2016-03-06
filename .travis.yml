@@ -1,11 +1,11 @@
 language: python
 python:
-  - "3.2"
   - "3.3"
   - "3.4"
   - "3.5"
 
-# Setup anaconda
+# Setup anaconda.  This is (currently) the fastest way to get up-to-date 
+# versions of the scientific python libraries installed on Travis CI.
 before_install:
   - wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda

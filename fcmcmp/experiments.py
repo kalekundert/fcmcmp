@@ -54,9 +54,18 @@ def load_experiments(yml_path, well_glob='**/*_{}_*.fcs'):
     experiments = []
 
     def load_well(name):
+
+        # Parse well and plate names from the given name.  The plate name is 
+        # optional, because often there is only one.
+
+        fields = name.rsplit('/', 1)
+        if len(fields) == 1:
+            plate, well = None, fields[0]
+        else:
+            plate, well = fields
+
         # Find the *.fcs file referenced by the given name.
 
-        plate, well = parse_well(name)
         if plate not in plates:
             raise UsageError(
                     "Plate '{}' not defined.".format(plate)
@@ -75,7 +84,7 @@ def load_experiments(yml_path, well_glob='**/*_{}_*.fcs'):
         
         logging.info('Loading {}'.format(well_path.name))
         meta, data = fcsparser.parse(str(well_path))
-        return data
+        return Well(name, meta, data)
 
 
     for experiment in documents:
@@ -84,6 +93,8 @@ def load_experiments(yml_path, well_glob='**/*_{}_*.fcs'):
         # Make sure each document has a label and a list of wells.  Other key- 
         # value pairs can be present but are not required.
 
+        if not experiment:
+            raise UsageError("An empty experiment was found.\nDid you accidentally leave '---' at the end of the file?")
         if 'label' not in experiment:
             raise UsageError("The following experiment is missing a label:\n\n{}".format(yaml.dump(experiment)))
         if 'wells' not in experiment:
@@ -97,22 +108,30 @@ def load_experiments(yml_path, well_glob='**/*_{}_*.fcs'):
 
     return experiments
         
-def parse_well(name):
-    """
-    Return the well, and possibly the plate, specified by the given name.
+def load_experiment(yml_path, experiment_name, well_glob='**/*_{}_*.fcs'):
+    experiments = load_experiments(yml_path, well_glob=well_glob)
+    for experiment in experiments:
+        if experiment['label'] == experiment_name:
+            return experiment
+    raise UsageError("No experiment named '{}'".format(experiment_name))
+        
+def yield_wells(experiments):
+    for experiment in experiments:
+        for condition in experiment['wells']:
+            for well in experiment['wells'][condition]:
+                yield experiment, condition, well
 
-    The purpose of a well name is to specify a particular well on a particular 
-    96-well plate.  The plate doesn't always have to be specified, because 
-    often there's only one.  The well is specified as a single capital letter 
-    followed by a number, like "A1".  The number may be zero-padded.  If there 
-    is a plate, it is specified before the well as an arbitrary name followed 
-    by a slash, like "replicate_1/A1".
-    """
-    import re
-    match = re.match('^(?:(.+)/)?([A-H][0-9]+)$', name)
-    if not match:
-        raise UsageError("Can't parse well name: '{}'".format(name))
-    return match.groups()
+
+class Well:
+
+    def __init__(self, label, meta, data):
+        self.label = label
+        self.meta = meta
+        self.data = data
+
+    def __repr__(self):
+        return 'Well({})'.format(self.label)
+
 
 class UsageError (Exception):
     """
@@ -122,3 +141,4 @@ class UsageError (Exception):
         super().__init__(message)
     
         
+

@@ -56,9 +56,9 @@ class ProcessingStep:
         """
         for condition, wells in experiment['wells'].items():
             for i, well in enumerate(wells):
-                processed_well = self.process_well(experiment, well)
-                if processed_well is not None:
-                    experiment['wells'][condition][i] = processed_well
+                processed_data = self.process_well(experiment, well)
+                if processed_data is not None:
+                    experiment['wells'][condition][i].data = processed_data
 
     def process_well(self, experiment, well):   # (abstract)
         """
@@ -68,7 +68,7 @@ class ProcessingStep:
         existing one for the given well, or it can just modify the given well 
         in place.
         """
-        raise NotImplementedError
+        raise NotImplementedError(self.__class__.__name__)
 
 
 class KeepRelevantChannels(ProcessingStep):
@@ -84,7 +84,7 @@ class KeepRelevantChannels(ProcessingStep):
         self.channels = None
 
     def process_well(self, experiment, well):
-        return well.reindex(columns=self.channels)
+        return well.data.reindex(columns=self.channels)
 
 
 class LogTransformation(ProcessingStep):
@@ -94,13 +94,15 @@ class LogTransformation(ProcessingStep):
 
     def process_well(self, experiment, well):
         for channel in self.channels:
-            well[channel] = np.log10(well[channel])
+            well.data[channel] = np.log10(well.data[channel])
 
 
 class GatingStep(ProcessingStep):
 
     def process_well(self, experiment, well):
-        return well.drop(well.index[self.gate(experiment, well)])
+        selection = self.gate(experiment, well)
+        if selection is not None:
+            return well.data.drop(well.data.index[selection])
 
     def gate(self, experiment, well):
         raise NotImplementedError
@@ -112,8 +114,24 @@ class GateNonPositiveEvents(GatingStep):
         self.channels = None
 
     def gate(self, experiment, well):
-        channels = self.channels or well.columns
-        masks = [well[channel] <= 0 for channel in channels]
+        channels = self.channels or well.data.columns
+        masks = [well.data[channel] <= 0 for channel in channels]
         return np.any(np.vstack(masks), axis=0)
+
+
+class GateSmallCells(GatingStep):
+
+    def __init__(self, threshold=40, save_size_col=False):
+        self.threshold = threshold
+        self.save_size_col = save_size_col
+
+    def gate(self, experiment, well):
+        from scipy.stats import linregress
+        fsc, ssc = well.data['FSC-A'], well.data['SSC-A']
+        m, b, *quality = linregress(fsc, ssc)
+        sizes = fsc + m * ssc
+        if self.save_size_col:
+            well.data['FSC-A + m * SSC-A'] = sizes
+        return sizes < np.percentile(sizes, self.threshold)
 
 

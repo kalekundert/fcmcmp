@@ -27,6 +27,7 @@ setup(
         'pyyaml',
         'pathlib',
         'pandas',
+        'scipy',
     ],
     license='MIT',
     zip_safe=False,

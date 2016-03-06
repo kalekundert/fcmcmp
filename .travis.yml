@@ -16,7 +16,7 @@ before_install:
 # Install packages
 install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy scipy pandas
-    pip install python-coveralls pytest-cov
+  - pip install python-coveralls pytest-cov
   - pip install .
 
 # Run tests

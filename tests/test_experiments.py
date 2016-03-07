@@ -5,6 +5,10 @@ from pathlib import Path
 
 dummy_data = Path(__file__).parent / 'dummy_data'
 
+def test_well_repr():
+    well = fcmcmp.Well('A1', None, None)
+    assert repr(well) == 'Well(A1)'
+
 def test_empty_file():
     with pytest.raises(fcmcmp.UsageError) as exc_info:
         fcmcmp.load_experiments(dummy_data / 'empty_file.yml')
@@ -29,6 +33,11 @@ def test_nonexistent_well():
     with pytest.raises(fcmcmp.UsageError) as exc_info:
         fcmcmp.load_experiments(dummy_data / 'nonexistent_well.yml')
     assert "No *.fcs files found for well" in str(exc_info.value)
+
+def test_ambiguous_well():
+    with pytest.raises(fcmcmp.UsageError) as exc_info:
+        fcmcmp.load_experiments(dummy_data / 'ambiguous_well.yml')
+    assert "Multiple *.fcs files found for well" in str(exc_info.value)
 
 def test_unspecified_plate():
     with pytest.raises(fcmcmp.UsageError) as exc_info:

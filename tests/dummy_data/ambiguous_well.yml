@@ -1,0 +1,7 @@
+plate: plate_1
+---
+label: sgGFP
+channel: FITC-A
+wells:
+    before: [A1]
+    after: [C1]

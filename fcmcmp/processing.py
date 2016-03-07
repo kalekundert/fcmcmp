@@ -3,6 +3,12 @@
 import numpy as np
 from pprint import pprint
 
+def yield_wells(experiments):
+    for experiment in experiments:
+        for condition in experiment['wells']:
+            for well in experiment['wells'][condition]:
+                yield experiment, condition, well
+
 def run_all_processing_steps(experiments):
     for step in _all_processing_steps:
         step(experiments)

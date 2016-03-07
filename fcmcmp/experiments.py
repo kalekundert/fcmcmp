@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 from pprint import pprint
-import pandas; pandas.set_option('display.large_repr', 'info')
 
 def load_experiments(yml_path, well_glob='**/*_{}_*.fcs'):
     import yaml, logging, fcsparser
@@ -115,11 +114,6 @@ def load_experiment(yml_path, experiment_name, well_glob='**/*_{}_*.fcs'):
             return experiment
     raise UsageError("No experiment named '{}'".format(experiment_name))
         
-def yield_wells(experiments):
-    for experiment in experiments:
-        for condition in experiment['wells']:
-            for well in experiment['wells'][condition]:
-                yield experiment, condition, well
 
 
 class Well:

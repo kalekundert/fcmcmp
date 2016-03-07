@@ -14,7 +14,7 @@ FCMcmp addresses this problem by defining a simple YAML file format that can
 associate wells and plates in pretty much any way you want.  When you ask 
 FCMcmp to parse these files, it returns a list- and dictionary-based data 
 structure that contains these associations, plus it automatically parses the 
-raw FCS data into a pandas data frame.
+raw FCS data into pandas data frames.
 
 .. image:: https://travis-ci.org/kalekundert/fcmcmp.svg?branch=master
     :target: https://travis-ci.org/kalekundert/fcmcmp
@@ -28,7 +28,7 @@ Installation
 
    pip install fcmcmp
 
-Only python>=3.2 is supported.
+Only python>=3.3 is tested.
 
 Quick Start
 ===========
@@ -90,7 +90,7 @@ Once you have a YAML metadata file, you can use ``fcmcmp`` to read it::
 
    >>> import fcmcmp, pprint
    >>> experiments = fcmcmp.load_experiments('my_plate.yml')
-   >>> pprint.pprint(experiment)
+   >>> pprint.pprint(experiments)
    [{'label': 'vaxadrin',
      'wells': {'with': [Well(B1), Well(B2), Well(B3)],
                'without': [Well(A1), Well(A2), Well(A3)]}},

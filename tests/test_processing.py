@@ -14,6 +14,17 @@ def dummy_data(data):
     }
     return [experiment], well
 
+def test_yield_wells():
+    experiments, well = dummy_data({
+        'FITC-A': [100],
+    })
+
+    experiment_i, condition_i, well_i = next(fcmcmp.yield_wells(experiments))
+
+    assert experiment_i == experiments[0]
+    assert condition_i == 'dummy'
+    assert well_i.label == 'A1'
+
 def test_keep_relevant_channels():
     experiments, well = dummy_data({
         'FSC-A': [100],
@@ -90,3 +101,23 @@ def test_gate_early_events():
     gate_early_events(experiments)
 
     assert well.data['Time'].tolist() == [2, 3, 4, 5]
+
+def test_all_processing_steps():
+    experiments, well = dummy_data({
+        'Time':   [ 0, 1, 2, 3, 4, 5],
+        'FITC-A': [ 1, 1, 1, 1,-1,-1],
+    })
+
+    fcmcmp.clear_all_processing_steps()
+
+    gate_nonpositive = fcmcmp.GateNonPositiveEvents()
+    gate_nonpositive.channels = ['FITC-A']
+    gate_early_events = fcmcmp.GateEarlyEvents()
+    gate_early_events.throwaway_secs = 2
+
+    fcmcmp.run_all_processing_steps(experiments)
+
+    assert well.data['Time'].tolist() == [2, 3]
+    assert well.data['FITC-A'].tolist() == [1, 1]
+
+

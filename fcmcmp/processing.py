@@ -9,6 +9,10 @@ def yield_wells(experiments):
             for well in experiment['wells'][condition]:
                 yield experiment, condition, well
 
+def clear_all_processing_steps():
+    global _all_processing_steps
+    _all_processing_steps = []
+
 def run_all_processing_steps(experiments):
     for step in _all_processing_steps:
         step(experiments)

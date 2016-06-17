@@ -3,11 +3,22 @@
 import numpy as np
 from pprint import pprint
 
-def yield_wells(experiments):
+def yield_wells(experiments, keyword=None):
     for experiment in experiments:
         for condition in experiment['wells']:
             for well in experiment['wells'][condition]:
-                yield experiment, condition, well
+                if keyword is None or \
+                        keyword in experiment['label'] or \
+                        keyword == condition or \
+                        keyword == well.label:
+                    yield experiment, condition, well
+
+def yield_unique_wells(experiments, keyword=None):
+    previous_wells = set()
+    for experiment, condition, well in yield_wells(experiments, keyword):
+        if well not in previous_wells:
+            previous_wells.add(well)
+            yield experiment, condition, well
 
 def clear_all_processing_steps():
     global _all_processing_steps

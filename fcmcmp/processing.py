@@ -162,4 +162,5 @@ class GateEarlyEvents(GatingStep):
         self.throwaway_secs = throwaway_secs
 
     def gate(self, experiment, well):
-        return well.data['Time'] < self.throwaway_secs
+        secs = well.data['Time'] * float(well.meta['$TIMESTEP'])
+        return secs < self.throwaway_secs

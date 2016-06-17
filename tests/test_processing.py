@@ -90,6 +90,7 @@ def test_gate_early_events():
     experiments, well = dummy_data({
         'Time':  [0, 1, 2, 3, 4, 5],
     })
+    well.meta['$TIMESTEP'] = '2'
 
     gate_early_events = fcmcmp.GateEarlyEvents()
     gate_early_events.throwaway_secs = 0
@@ -97,7 +98,7 @@ def test_gate_early_events():
 
     assert well.data['Time'].tolist() == [0, 1, 2, 3, 4, 5]
 
-    gate_early_events.throwaway_secs = 2
+    gate_early_events.throwaway_secs = 4
     gate_early_events(experiments)
 
     assert well.data['Time'].tolist() == [2, 3, 4, 5]
@@ -107,13 +108,14 @@ def test_all_processing_steps():
         'Time':   [ 0, 1, 2, 3, 4, 5],
         'FITC-A': [ 1, 1, 1, 1,-1,-1],
     })
+    well.meta['$TIMESTEP'] = '2'
 
     fcmcmp.clear_all_processing_steps()
 
     gate_nonpositive = fcmcmp.GateNonPositiveEvents()
     gate_nonpositive.channels = ['FITC-A']
     gate_early_events = fcmcmp.GateEarlyEvents()
-    gate_early_events.throwaway_secs = 2
+    gate_early_events.throwaway_secs = 4
 
     fcmcmp.run_all_processing_steps(experiments)
 

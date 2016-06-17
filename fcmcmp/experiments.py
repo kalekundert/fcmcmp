@@ -127,6 +127,191 @@ class Well:
         return 'Well({})'.format(self.label)
 
 
+
+def define_96_well_plates(define_well, define_experiment=lambda expt: None,
+        plate=None, plates=None, plate_order=None, layout='col/row/plate',
+        **extra_params):
+
+    header = []
+    script_name = Path(sys.argv[0]).stem
+
+    # If the user didn't specify any plates:
+    if plate is None and plates is None:
+        plates = {None: ''}
+
+    # If the user specified a single plate:
+    elif plate is not None and plates is None:
+        header.append({'plate': plate.replace('$', script_name)})
+        plates = {None: plate}
+
+    # If the user specifies multiple plates:
+    elif plate is None and plates is not None:
+        header.append({'plates': {
+            k: v.replace('$', script_name) for k, v in plates.items()}})
+
+    else:
+        raise UsageError("cannot specify both 'plate' and 'plates'")
+
+    # Set the order in which the plates should be considered.  The default 
+    # order is alphabetical.
+
+    if plate_order is None:
+        plate_order = natsorted(plates)
+
+    # Understand how the plates are indexed, i.e. do the indices increment by 
+    # column then row then plate, or by column then plate then row, etc.
+
+    steps = layout.split('/')
+
+    if len(steps) == 2:
+        steps.append('plate')
+    if set(steps) != {'row', 'col', 'plate'}:
+        raise UsageError("invalid layout: '{}'".format(layout))
+
+    strides = {
+            'col': 12,
+            'row': 8,
+            'plate': len(plates),
+    }
+    divisors = {
+            steps[0]: 1,
+            steps[1]: strides[steps[0]],
+            steps[2]: strides[steps[0]] * strides[steps[1]],
+    }
+
+    # Create experiments by iterating through each well and associating a 
+    # labels and a condition with each one.
+
+    experiments = []
+
+    for i in range(96 * len(plates)):
+
+        # Figure out which row, column, and plate this index refers to.
+
+        row = (i // divisors['row']) % strides['row']
+        col = (i // divisors['col']) % strides['col']
+        plate = plate_order[(i // divisors['plate']) % strides['plate']]
+
+        # Get the experiment and condition to associate with this well from the 
+        # user.  Skip this well if define_well() returns None.
+
+        well = WellCursor96(i, row, col, plate)
+        definition = define_well(well)
+
+        if definition is None:
+            continue
+
+        label, condition = definition
+
+        # If an experiment with this label already exists, find it.  
+        # Otherwise create an empty experiment data structure and add 
+        # it to the list of experiments.
+
+        try:
+            experiment = next(
+                    expt for expt in experiments
+                    if expt['label'] == label)
+
+        except StopIteration:
+            experiment = extra_params.copy()
+            experiment['label'] = label
+            experiment['wells'] = {}
+            experiments.append(experiment)
+
+        # Associate this well with the given condition.
+
+        experiment['wells'].setdefault(condition, []).append(str(well))
+
+    # Allow the user to add custom parameters to each experiment.
+
+    for experiment in experiments:
+        define_experiment(experiment)
+
+    # Export the experiments to YAML and either print them to stdout or save 
+    # them to a file, depending on the command-line arguments.
+
+    output_path = script_name + '.yml'
+
+    import docopt
+    args = docopt.docopt("""\
+Usage:
+    {script_name}.py [-o]
+
+Options:
+    -o --output
+        Save the experimental layout to ``{output_path}``
+""".format(**locals()))
+
+    # I wanted to use yaml.dump_all() here, but yaml.dump() has a better 
+    # default indentation algorithm.
+
+    dump_config = lambda **kwargs: '---\n'.join(
+            yaml.dump(x, **kwargs) for x in header + experiments)
+
+    if args['--output']:
+        with open(output_path, 'w') as file:
+            file.write(dump_config())
+    else:
+        print(dump_config())
+
+class WellCursor96:
+
+    def __init__(self, index, row, col, plate):
+        self._index = index
+        self._row = row
+        self._col = col
+        self._plate = plate
+
+    def __repr__(self):
+        return self.label
+
+    def __eq__(self, other):
+        try:
+            return (self.index, self.row, self.col, self.plate) == \
+                   (other.index, other.row, other.col, other.plate)
+
+        except AttributeError:
+            other_plate, other_well = parse_well_label(str(other))
+            other_well_match = re.match('([A-H])([0-9]{1,2})', other_well)
+
+            if not other_well_match:
+                raise UsageError("can't compare {} to {}".format(other, self))
+
+            other_row = list('ABCDEFGH').index(other_well_match.group(1))
+            other_col = int(other_well_match.group(2)) - 1
+
+            return (self.row, self.col, self.plate) == \
+                   (other_row, other_col, other_plate)
+
+    @property
+    def index(self):
+        return self._index
+
+    @property
+    def row(self):
+        return self._row
+
+    @property
+    def col(self):
+        return self._col
+
+    @property
+    def plate(self):
+        return self._plate
+
+    @property
+    def label(self):
+        row = 'ABCDEFGH'[self.row]
+        col = self.col + 1
+        label = '{}{:02d}'.format(row, col)
+
+        if self.plate:
+            label = '{}/{}'.format(self.plate, label)
+
+        return label
+
+
+
 class UsageError (Exception):
     """
     Indicate errors caused by invalid user input.

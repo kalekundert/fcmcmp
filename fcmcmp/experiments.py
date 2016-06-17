@@ -56,7 +56,7 @@ def load_experiments(config_path, well_glob='**/*_{}_*.fcs'):
     elif inferred_path.is_dir():
         plates = {None: inferred_path}
     else:
-        raise UsageError("No plates specified.")
+        plates = {}
 
     # Construct and fill in a list of experiments.  Well names are converted 
     # into paths based on the user-given glob pattern, then parsed and stored 
@@ -65,8 +65,14 @@ def load_experiments(config_path, well_glob='**/*_{}_*.fcs'):
     # can be processed independently, which is important for many workflows.
 
     experiments = []
+    includes = {}
 
     def load_well(label):
+        # Short-circuit the case where the well has already been loaded, which 
+        # is triggered by the "from" external reference machinery.
+
+        if isinstance(label, Well):
+            return label
 
         # Parse well and plate names from the given label.  The plate name is 
         # optional, because often there is only one.
@@ -97,13 +103,20 @@ def load_experiments(config_path, well_glob='**/*_{}_*.fcs'):
 
 
     for experiment in documents:
-        experiments.append(experiment)
+        if not experiment:
+            raise UsageError("An empty experiment was found.\nDid you accidentally leave '---' at the end of the file?")
+
+        # Reference experiments from other files if the special "from" keyword 
+        # is present.
+
+        if 'from' in experiment:
+            experiment = load_experiment(
+                    config_path.parent / experiment['from'],
+                    experiment['label'])
 
         # Make sure each document has a label and a list of wells.  Other key- 
         # value pairs can be present but are not required.
 
-        if not experiment:
-            raise UsageError("An empty experiment was found.\nDid you accidentally leave '---' at the end of the file?")
         if 'label' not in experiment:
             raise UsageError("The following experiment is missing a label:\n\n{}".format(yaml.dump(experiment)))
         if 'wells' not in experiment:
@@ -115,14 +128,16 @@ def load_experiments(config_path, well_glob='**/*_{}_*.fcs'):
         for well_type, well_names in experiment['wells'].items():
             experiment['wells'][well_type] = [load_well(x) for x in well_names]
 
+        experiments.append(experiment)
+
     return experiments
         
-def load_experiment(config_path, experiment_name, well_glob='**/*_{}_*.fcs'):
+def load_experiment(config_path, experiment_label, well_glob='**/*_{}_*.fcs'):
     experiments = load_experiments(config_path, well_glob=well_glob)
     for experiment in experiments:
-        if experiment['label'] == experiment_name:
+        if experiment['label'] == experiment_label:
             return experiment
-    raise UsageError("No experiment named '{}'".format(experiment_name))
+    raise UsageError("No experiment named '{}'".format(experiment_label))
         
 
 class Well:

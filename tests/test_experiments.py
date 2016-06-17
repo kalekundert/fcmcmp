@@ -5,6 +5,14 @@ from pathlib import Path
 
 dummy_data = Path(__file__).parent / 'dummy_data'
 
+def check_wells(experiments, **expected_wells):
+    for expriment, condition, well in fcmcmp.yield_wells(experiments):
+        assert condition in expected_wells
+        assert well.label in expected_wells[condition]
+        assert isinstance(well.meta, dict)
+        assert isinstance(well.data, pd.DataFrame)
+
+
 def test_well_repr():
     well = fcmcmp.Well('A1', None, None)
     assert repr(well) == 'Well(A1)'
@@ -42,7 +50,7 @@ def test_ambiguous_well():
 def test_unspecified_plate():
     with pytest.raises(fcmcmp.UsageError) as exc_info:
         fcmcmp.load_experiments(dummy_data / 'unspecified_plate.yml')
-    assert "No plates specified" in str(exc_info.value)
+    assert "No default plate defined" in str(exc_info.value)
 
 def test_undefined_plate():
     with pytest.raises(fcmcmp.UsageError) as exc_info:
@@ -89,6 +97,22 @@ def test_multiple_experiments():
 
     check_wells(experiments, before=['A1'], after=['B1'])
 
+def test_external_reference():
+    experiments = fcmcmp.load_experiments(dummy_data / 'external_reference.yml')
+
+    assert experiments[0]['label'] == 'sgGFP'
+    assert experiments[0]['channel'] == 'FITC-A'
+
+    check_wells(experiments, before=['A1'], after=['B1'])
+
+def test_python_config():
+    experiments = fcmcmp.load_experiments(dummy_data / 'plate_1.py')
+
+    assert experiments[0]['label'] == 'sgGFP'
+    assert experiments[0]['channel'] == 'FITC-A'
+
+    check_wells(experiments, before=['A1'], after=['B1'])
+
 def test_load_experiment():
     gfp_experiment = fcmcmp.load_experiment(
             dummy_data / 'multiple_experiments.yml', 'sgGFP')
@@ -104,12 +128,5 @@ def test_load_experiment():
         fcmcmp.load_experiment(
                 dummy_data / 'multiple_experiments.yml', 'foobar')
     assert "No experiment named 'foobar'" in str(exc_info.value)
-
-def check_wells(experiments, **expected_wells):
-    for expriment, condition, well in fcmcmp.yield_wells(experiments):
-        assert condition in expected_wells
-        assert well.label in expected_wells[condition]
-        assert isinstance(well.meta, dict)
-        assert isinstance(well.data, pd.DataFrame)
 
 

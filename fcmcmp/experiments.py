@@ -1,17 +1,31 @@
 #!/usr/bin/env python3
 
+import sys, re, yaml, logging, fcsparser, subprocess
+from pathlib import Path
+from natsort import natsorted
 from pprint import pprint
 
-def load_experiments(yml_path, well_glob='**/*_{}_*.fcs'):
-    import yaml, logging, fcsparser
-    from pathlib import Path
+def parse_well_label(label):
+    fields = label.rsplit('/', 1)
+    if len(fields) == 1:
+        return None, fields[0]
+    else:
+        return fields
 
-    yml_path = Path(yml_path)
-    with yml_path.open() as file:
-        documents = [x for x in yaml.load_all(file)]
+def load_experiments(config_path, well_glob='**/*_{}_*.fcs'):
+    config_path = Path(config_path)
+
+    if config_path.suffix == '.py':
+        py_command = 'python', str(config_path)
+        yml_config = subprocess.check_output(py_command)
+        documents = list(yaml.load_all(yml_config))
+
+    else:
+        with config_path.open() as file:
+            documents = list(yaml.load_all(file))
 
     if not documents:
-        raise UsageError("'{}' is empty.".format(yml_path))
+        raise UsageError("'{}' is empty.".format(config_path))
 
     # Find the *.fcs data files relevant to this experiment.  If there is a 
     # document with a mapping called "plates:", treat the values as paths to 
@@ -22,10 +36,10 @@ def load_experiments(yml_path, well_glob='**/*_{}_*.fcs'):
     # by either of these two mechanisms, try to infer a path from the name of 
     # the YAML file itself.
 
-    inferred_path = yml_path.parent / yml_path.stem
+    inferred_path = config_path.parent / config_path.stem
 
     def str_to_path(s):
-        return Path(s) if Path(s).is_absolute() else yml_path.parent/s
+        return Path(s) if Path(s).is_absolute() else config_path.parent/s
 
     def clean_up_plate_document():
         if len(documents[0]) > 1:
@@ -52,18 +66,14 @@ def load_experiments(yml_path, well_glob='**/*_{}_*.fcs'):
 
     experiments = []
 
-    def load_well(name):
+    def load_well(label):
 
-        # Parse well and plate names from the given name.  The plate name is 
+        # Parse well and plate names from the given label.  The plate name is 
         # optional, because often there is only one.
 
-        fields = name.rsplit('/', 1)
-        if len(fields) == 1:
-            plate, well = None, fields[0]
-        else:
-            plate, well = fields
+        plate, well = parse_well_label(label)
 
-        # Find the *.fcs file referenced by the given name.
+        # Find the *.fcs file referenced by the given label.
 
         if plate not in plates:
             raise UsageError(
@@ -74,16 +84,16 @@ def load_experiments(yml_path, well_glob='**/*_{}_*.fcs'):
         plate_path = plates[plate]
         well_paths = list(plate_path.glob(well_glob.format(well)))
         if len(well_paths) == 0:
-            raise UsageError("No *.fcs files found for well '{}'".format(name))
+            raise UsageError("No *.fcs files found for well '{}'".format(label))
         if len(well_paths) > 1:
-            raise UsageError("Multiple *.fcs files found for well '{}'".format(name))
+            raise UsageError("Multiple *.fcs files found for well '{}'".format(label))
         well_path = well_paths[0]
 
         # Load the cell data for the given well.
         
         logging.info('Loading {}'.format(well_path.name))
         meta, data = fcsparser.parse(str(well_path))
-        return Well(name, meta, data)
+        return Well(label, meta, data)
 
 
     for experiment in documents:
@@ -107,14 +117,13 @@ def load_experiments(yml_path, well_glob='**/*_{}_*.fcs'):
 
     return experiments
         
-def load_experiment(yml_path, experiment_name, well_glob='**/*_{}_*.fcs'):
-    experiments = load_experiments(yml_path, well_glob=well_glob)
+def load_experiment(config_path, experiment_name, well_glob='**/*_{}_*.fcs'):
+    experiments = load_experiments(config_path, well_glob=well_glob)
     for experiment in experiments:
         if experiment['label'] == experiment_name:
             return experiment
     raise UsageError("No experiment named '{}'".format(experiment_name))
         
-
 
 class Well:
 

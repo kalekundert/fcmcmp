@@ -200,6 +200,11 @@ well can certainly be included in many different experiments.
 
 __ https://jeffknupp.com/blog/2013/04/07/improve-your-python-yield-and-generators-explained/
 
+It's worth noting that ``fcmcmp`` does not provide any plotting functionality.  
+That's because ``fcmcmp`` only aims to annotate your data and to provide it to 
+you in a way that's easy to work with.  The actual plotting is left to you and 
+``matplotlib``.
+
 Bugs and new features
 =====================
 Use the GitHub issue tracker if you find any bugs or would like to see any new 

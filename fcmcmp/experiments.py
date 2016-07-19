@@ -259,11 +259,19 @@ def define_96_well_plates(define_well, define_experiment=lambda expt: None,
     import docopt
     args = docopt.docopt("""\
 Usage:
-    {script_name}.py [-o]
+    {script_name}.py [-ocq]
 
 Options:
     -o --output
         Save the experimental layout to ``{output_path}``
+
+    -c --count
+        Print the number of experiments contained these plates.
+
+    -q --quiet
+        Don't print anything.  This is useful if you want to print some 
+        debugging information in your callbacks and don't wat to get flooded 
+        with YAML text.
 """.format(**locals()))
 
     # I wanted to use yaml.dump_all() here, but yaml.dump() has a better 
@@ -273,8 +281,13 @@ Options:
             yaml.dump(x, **kwargs) for x in header + experiments)
 
     if args['--output']:
+        
         with open(output_path, 'w') as file:
             file.write(dump_config())
+    elif args['--count']:
+        print(len(experiments))
+    elif args['--quiet']:
+        pass
     else:
         print(dump_config())
 
@@ -316,6 +329,10 @@ class WellCursor96:
         return self._row
 
     @property
+    def row_abc(self):
+        return 'ABCDEFGH'[self.row]
+
+    @property
     def col(self):
         return self._col
 
@@ -325,9 +342,7 @@ class WellCursor96:
 
     @property
     def label(self):
-        row = 'ABCDEFGH'[self.row]
-        col = self.col + 1
-        label = '{}{:02d}'.format(row, col)
+        label = '{}{:02d}'.format(self.row_abc, self.col + 1)
 
         if self.plate:
             label = '{}/{}'.format(self.plate, label)

@@ -120,11 +120,11 @@ Note that if you reference the same well more than once (e.g. for controls that
 apply to all of your experiments), each reference is parsed separately and gets 
 its own copy of all the data.
 
-Plotting the data
-~~~~~~~~~~~~~~~~~
+Working with the data
+~~~~~~~~~~~~~~~~~~~~~
 Once the experiments are loaded into python as described above, ``fcmcmp`` 
 provides a couple ways to interact with them.  The first is to apply one or 
-more of a handful of pre-defined "processing steps":
+more of a handful of pre-defined "processing steps"::
 
    >>> ch = 'FITC-A', 'PE-Texas Red-A'
    >>> p1 = fcmcmp.GateEarlyEvents(throwaways_secs=2)
@@ -160,7 +160,7 @@ In this example:
 
 Instead of calling each processing step individually, you can also use the 
 ``run_all_processing_steps()`` function to call them all at once.  If you do 
-this, you don't even need to make a variable for each step:
+this, you don't even need to make a variable for each step::
 
    >>> fcmcmp.GateEarlyEvents(throwaways_secs=2)
    >>> fcmcmp.GateSmallCells(threshold=40, save_size_col=True)
@@ -187,9 +187,7 @@ The second way to interact with the experiments is to use the ``yield_wells()``
 and ``yield_unique_wells()`` functions.  These are both `generators`__ which 
 iterate through all of your experiments and yield each well one at a time.  The 
 purpose of these functions is to make the nested ``experiments`` data structure 
-seem more like a flat list:
-
-__ https://jeffknupp.com/blog/2013/04/07/improve-your-python-yield-and-generators-explained/
+seem more like a flat list::
 
    >>> for experiment, condition, well in fcmcmp.yield_wells(experiments):
    >>>     print(experiment, condition, well)
@@ -199,6 +197,8 @@ matching experiment label, condition, or well label will be returned.  The only
 difference between ``yield_wells()`` and ``yield_unique_wells()`` is that the 
 former won't yield the same well twice.  This is important because the same 
 well can certainly be included in many different experiments.
+
+__ https://jeffknupp.com/blog/2013/04/07/improve-your-python-yield-and-generators-explained/
 
 Bugs and new features
 =====================

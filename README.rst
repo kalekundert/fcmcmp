@@ -32,9 +32,9 @@ Installation
 ============
 ``fcmcmp`` is available on PyPI::
 
-   pip install fcmcmp
+   pip3 install fcmcmp
 
-Only python>=3.3 is tested.
+Only python>=3.4 is supported.
 
 Quick Start
 ===========
@@ -49,6 +49,8 @@ hierarchy::
          Specimen_003_A3_A03_003.fcs
          ...
 
+Loading the data
+~~~~~~~~~~~~~~~~
 First, we need to make a YAML metadata file describing the relationships 
 between the wells on this plate::
 
@@ -65,12 +67,12 @@ between the wells on this plate::
 
 In this example, the name of the plate directory is inferred from the name of 
 the YAML file.  You can also explicitly specify the path to the plate directory 
-by adding the following header before the "label"/"wells" sections::
+by adding the following header before the ``label``/``wells`` sections::
 
    plate: path/to/my_plate
    ---
 
-You can even reference well from multiple plates in one file::
+You can even reference wells from multiple plates in one file::
 
    plates:
       foo: path/to/foo_plate
@@ -81,8 +83,8 @@ You can even reference well from multiple plates in one file::
       without: [foo/A1, foo/A2, foo/A3]
       with: [bar/A1, bar/A2, bar/A3]
 
-Note that the "label" and "wells" fields are required, but you can add, remove, 
-or rename any other field::
+Note that the ``label`` and ``wells`` fields are required, but you can add, 
+remove, or rename any other field::
 
    label: vaxa-smacks
    channel: FITC-A
@@ -117,6 +119,86 @@ represented by ``Well`` objects, which have only three attributes:
 Note that if you reference the same well more than once (e.g. for controls that 
 apply to all of your experiments), each reference is parsed separately and gets 
 its own copy of all the data.
+
+Plotting the data
+~~~~~~~~~~~~~~~~~
+Once the experiments are loaded into python as described above, ``fcmcmp`` 
+provides a couple ways to interact with them.  The first is to apply one or 
+more of a handful of pre-defined "processing steps":
+
+   >>> ch = 'FITC-A', 'PE-Texas Red-A'
+   >>> p1 = fcmcmp.GateEarlyEvents(throwaways_secs=2)
+   >>> p1(experiments)
+   >>> p2 = fcmcmp.GateSmallCells(threshold=40, save_size_col=True)
+   >>> p2(experiments)
+   >>> p3 = fcmcmp.GateNonPositiveEvents(ch)
+   >>> p3(experiments)
+   >>> p4 = fcmcmp.LogTransformation(ch)
+   >>> p4(experiments)
+   >>> p5 = fcmcmp.KeepRelevantChannels(ch)
+   >>> p5(experiments)
+
+In this example:
+
+- ``GateEarlyEvents`` discards the first few seconds of data, which is useful 
+  when you're using a high-throughput sampler and you suspect that cells from 
+  the previous well are being recorded at the beginning of each well.
+- ``GateSmallCells`` combines the ``FSC-A`` and ``SSC-A`` channels to estimate 
+  how the size of each event, then discards any events below the given 
+  percentile (40% in this example).
+- ``GateNonPositiveEvents`` discards negative data on the specified channels.  
+  I have to admit that I don't understand how "fluorescence peak area" data can 
+  be negative, but in any case this can be important if you want to work with 
+  the logarithm of your data, because of course you can't take the logarithm of 
+  negative data.
+- ``LogTransform`` takes the logarithm of the data in the specified channels.  
+  This is a very standard processing step for fluorescent channels.
+- ``KeepRelevantChannels`` discards all the data for any channels that aren't 
+  explicitly listed.  This is mostly useful for when you're printing out data 
+  to the terminal and don't want to be distracted by channels you collected but 
+  aren't interested in at the moment.
+
+Instead of calling each processing step individually, you can also use the 
+``run_all_processing_steps()`` function to call them all at once.  If you do 
+this, you don't even need to make a variable for each step:
+
+   >>> fcmcmp.GateEarlyEvents(throwaways_secs=2)
+   >>> fcmcmp.GateSmallCells(threshold=40, save_size_col=True)
+   >>> fcmcmp.GateNonPositiveEvents(ch)
+   >>> fcmcmp.LogTransformation(ch)
+   >>> fcmcmp.KeepRelevantChannels(ch)
+   >>> fcmcmp.run_all_processing_steps()
+
+You can also write your own processing steps by inheriting from either 
+``ProcessingStep`` or ``GatingStep`` and reimplementing the proper methods.  
+``ProcessingStep`` is for general transformations and has two virtual methods: 
+``process_experiment()`` and ``process_well()``.  The former is called once for 
+each experiment and should transform that experiment in place.  The latter is 
+called once for each well and can either modify the well in place (and return 
+None) or return the processed data, which will overwrite the original data.
+
+``GatingStep`` is specifically for transformations regarding which data points 
+to keep and which to throw out.  It is itself a ``ProcessingStep``, but it has 
+a different virtual method(): ``gate()``.  This method is called on each well 
+and should return a boolean numpy array.  Those indices that are ``False`` will 
+be thrown out, those that are ``True`` will be kept.
+
+The second way to interact with the experiments is to use the ``yield_wells()`` 
+and ``yield_unique_wells()`` functions.  These are both `generators`__ which 
+iterate through all of your experiments and yield each well one at a time.  The 
+purpose of these functions is to make the nested ``experiments`` data structure 
+seem more like a flat list:
+
+__ https://jeffknupp.com/blog/2013/04/07/improve-your-python-yield-and-generators-explained/
+
+   >>> for experiment, condition, well in fcmcmp.yield_wells(experiments):
+   >>>     print(experiment, condition, well)
+
+Both functions take an optional keyword argument.  If given, only wells with a 
+matching experiment label, condition, or well label will be returned.  The only 
+difference between ``yield_wells()`` and ``yield_unique_wells()`` is that the 
+former won't yield the same well twice.  This is important because the same 
+well can certainly be included in many different experiments.
 
 Bugs and new features
 =====================

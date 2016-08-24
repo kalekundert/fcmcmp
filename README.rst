@@ -144,8 +144,8 @@ In this example:
   when you're using a high-throughput sampler and you suspect that cells from 
   the previous well are being recorded at the beginning of each well.
 - ``GateSmallCells`` combines the ``FSC-A`` and ``SSC-A`` channels to estimate 
-  how the size of each event, then discards any events below the given 
-  percentile (40% in this example).
+  the size of each event, then discards any events below the given percentile 
+  (40% in this example).
 - ``GateNonPositiveEvents`` discards negative data on the specified channels.  
   I have to admit that I don't understand how "fluorescence peak area" data can 
   be negative, but in any case this can be important if you want to work with 
@@ -179,9 +179,9 @@ None) or return the processed data, which will overwrite the original data.
 
 ``GatingStep`` is specifically for transformations regarding which data points 
 to keep and which to throw out.  It is itself a ``ProcessingStep``, but it has 
-a different virtual method(): ``gate()``.  This method is called on each well 
-and should return a boolean numpy array.  Those indices that are ``False`` will 
-be thrown out, those that are ``True`` will be kept.
+a different virtual method: ``gate()``.  This method is called on each well and 
+should return a boolean numpy array.  Those indices that are ``False`` will be 
+thrown out, those that are ``True`` will be kept.
 
 The second way to interact with the experiments is to use the ``yield_wells()`` 
 and ``yield_unique_wells()`` functions.  These are both `generators`__ which 
@@ -196,7 +196,7 @@ Both functions take an optional keyword argument.  If given, only wells with a
 matching experiment label, condition, or well label will be returned.  The only 
 difference between ``yield_wells()`` and ``yield_unique_wells()`` is that the 
 former won't yield the same well twice.  This is important because the same 
-well can certainly be included in many different experiments.
+well can be included in any number of experiments.
 
 __ https://jeffknupp.com/blog/2013/04/07/improve-your-python-yield-and-generators-explained/
 

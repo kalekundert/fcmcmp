@@ -12,14 +12,13 @@ def parse_well_label(label):
     else:
         return fields
 
-def load_experiments(config_path, well_glob='**/*_{}_*.fcs'):
+def load_experiments(config_path, well_glob='**/*_{}*.fcs'):
     config_path = Path(config_path)
 
     if config_path.suffix == '.py':
         py_command = 'python', str(config_path)
         yml_config = subprocess.check_output(py_command)
         documents = list(yaml.load_all(yml_config))
-
     else:
         with config_path.open() as file:
             documents = list(yaml.load_all(file))
@@ -85,14 +84,15 @@ def load_experiments(config_path, well_glob='**/*_{}_*.fcs'):
             raise UsageError(
                     "Plate '{}' not defined.".format(plate)
                     if plate is not None else
-                    "No default plate defined.")
+                    "No default plate defined for well '{}'.".format(label))
 
         plate_path = plates[plate]
         well_paths = list(plate_path.glob(well_glob.format(well)))
+        glob_str = str(plate_path / well_glob.format(well))  # For error messages
         if len(well_paths) == 0:
-            raise UsageError("No *.fcs files found for well '{}'".format(label))
+            raise UsageError("No *.fcs files found for well '{}' matching {}".format(label, glob_str))
         if len(well_paths) > 1:
-            raise UsageError("Multiple *.fcs files found for well '{}'".format(label))
+            raise UsageError("Multiple *.fcs files found for well '{}' matching {}".format(label, glob_str))
         well_path = well_paths[0]
 
         # Load the cell data for the given well.
@@ -132,12 +132,12 @@ def load_experiments(config_path, well_glob='**/*_{}_*.fcs'):
 
     return experiments
         
-def load_experiment(config_path, experiment_label, well_glob='**/*_{}_*.fcs'):
+def load_experiment(config_path, experiment_label, well_glob='**/*_{}*.fcs'):
     experiments = load_experiments(config_path, well_glob=well_glob)
     for experiment in experiments:
         if experiment['label'] == experiment_label:
             return experiment
-    raise UsageError("No experiment named '{}'".format(experiment_label))
+    raise UsageError("No experiment named '{}' in '{}'".format(experiment_label, config_path))
         
 
 class Well:
@@ -148,7 +148,10 @@ class Well:
         self.data = data
 
     def __repr__(self):
-        return 'Well({})'.format(self.label)
+        return '{}({})'.format(self.__class__.__name__, self.label)
+
+    def __lt__(self, other):
+        return self.label < other.label
 
 
 

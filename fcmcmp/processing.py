@@ -51,6 +51,7 @@ class ProcessingStep:
         # that subclasses will overwrite __new__() and forget to call this 
         # method.
         step = super().__new__(cls)
+        step.verbose = False
         _all_processing_steps.append(step)
         return step
 
@@ -122,7 +123,14 @@ class GatingStep(ProcessingStep):
 
     def process_well(self, experiment, well):
         selection = self.gate(experiment, well)
+
         if selection is not None:
+            if self.verbose:
+                num_events = len(selection)
+                num_kept = num_events - sum(selection)
+                gate_name = self.__class__.__name__
+                print("{} ({}): {}/{}".format(gate_name, well.label, num_kept, len(selection)))
+
             return well.data.drop(well.data.index[selection])
 
     def gate(self, experiment, well):

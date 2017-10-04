@@ -120,9 +120,14 @@ def load_experiments(config_path, well_glob='**/*_{}*.fcs'):
         # is present.
 
         if 'from' in experiment:
-            experiment = load_experiment(
+            referenced_experiment = load_experiment(
                     config_path.parent / experiment['from'],
                     experiment['label'])
+
+            experiment.update(referenced_experiment)
+
+            if 'relabel' in experiment:
+                experiment['label'] = experiment['relabel']
 
         # Make sure each document has a label and a list of wells.  Other key- 
         # value pairs can be present but are not required.

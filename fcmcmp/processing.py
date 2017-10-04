@@ -116,7 +116,8 @@ class LogTransformation(ProcessingStep):
 
     def process_well(self, experiment, well):
         for channel in self.channels:
-            well.data[channel] = np.log10(well.data[channel])
+            if channel in well.data.columns:
+                well.data[channel] = np.log10(well.data[channel])
 
 
 class GatingStep(ProcessingStep):

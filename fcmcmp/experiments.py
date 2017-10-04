@@ -57,6 +57,16 @@ def load_experiments(config_path, well_glob='**/*_{}*.fcs'):
     else:
         plates = {}
 
+    # If the first document (after the plate document, if there was one) is a 
+    # mapping without a label entry, treat it as a set of default values to 
+    # include in every other document.
+
+    if len(documents) > 1 and 'label' not in documents[0]:
+        defaults = documents[0]
+        del documents[0]
+    else:
+        defaults = {}
+
     # Construct and fill in a list of experiments.  Well names are converted 
     # into paths based on the user-given glob pattern, then parsed and stored 
     # as pandas data frames.  Note that if a well is referenced more than once, 
@@ -127,6 +137,12 @@ def load_experiments(config_path, well_glob='**/*_{}*.fcs'):
 
         for well_type, well_names in experiment['wells'].items():
             experiment['wells'][well_type] = [load_well(x) for x in well_names]
+
+        # Fill in any default values.
+
+        for key, value in defaults.items():
+            if key not in experiment:
+                experiment[key] = value
 
         experiments.append(experiment)
 
